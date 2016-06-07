@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>TPP Pweb Ayu Marlina (1311521033)</title>
+	<style type="text/css">
+	#awal{width :50%; float: left;}
+	#akhir{width: 50%; float: right;}
+	</style>
+	<script type="text/javascript">
+	function tambahKota () {
+		//memilih element
+		var select = document.getElementById('provinsiAdd');
+		var kotaInput = document.getElementById('inputKota');
+		var provinsi = select.value;
+		var kota = kotaInput.value;
+		var params = "tambahprov="+provinsi+"&tambahkota="+kota;
+		var respondata;
+		var request = new XMLHttpRequest();
+		request.open('POST', 'http://localhost/api/server.php', true);
+		request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		request.onreadystatechange = function(){
+				if(request.readyState==4 && request.status == 200){
+					respondata=request.response;
+					alert(respondata);
+				}
+		}
+		request.send(params);
+		
+	}
+	function defineKota(provinsi){
+		console.log(provinsi);
+		kota=null;
+		var request = new XMLHttpRequest();
+		request.open('GET', 'http://localhost/api/server.php?prov='+provinsi, true);
+		
+		request.onreadystatechange = function(){
+				if(request.readyState==4 && request.status == 200){
+					kota=JSON.parse(request.response);
+					console.log(kota);
+					var n = kota.length; //menghitung banyak kota
+					var select = document.getElementById('kota');
+					select.innerHTML="";
+					select.innerHTML="<option>-Pilih Kota-</option>";
+					if (n>0){//jika kota tidak kosong
+						for (var i=0; i<n; i++){//mengulang sebanyak (banyak kota) kali
+							var opt = document.createElement('option');//membuat elemen option kota [i]
+							opt.value=kota[i];
+							opt.innerText=kota[i];
+							select.appendChild(opt);//memasukkan option kedalam select
+						}
+					}
+				}
+		}
+		request.send(null);
+		
+		
+	}
+	function displayCuaca(kota){
+		var request = new XMLHttpRequest();
+			request.open('GET', 'http://api.openweathermap.org/data/2.5/forecast/daily?q='+kota+'&appid=760ecc0dcebe8a04d08726f9346b56bd&units=metric', true);//request API dengan kota sebagai parameter, metric tu utk mencari satuannya apakah celcius meter atau apa
+			request.onreadystatechange = function(){
+				if(request.readyState==4 && request.status == 200){
+					
+					weather = JSON.parse(request.response);
+					console.log(weather);
+					list = weather.list;
+					n = list.length;
+					var div = document.getElementById('laporanCuaca');
+					div.innerHTML="";
+					div.innerHTML ="<br><br><br><br><br><br><h2>Ramalan Cuaca kota "+kota+"</h2>";
+					for(var i=0; i<n; i++){
+						var suhu = list[i].temp.day;
+						var suhuNight = list[i].temp.night;
+						var cuaca = list[i].weather[0]["main"];
+						var keterangan = list[i].weather[0]["description"];
+						var icon = list[i].weather[0]["icon"];
+						var iconsrc = "http://openweathermap.org/img/w/"+icon+".png";
+						var timestamp = list[i].dt;
+						tg = new Date(timestamp*1000);
+						tgl = tg.getDate();
+						bulan = 1+tg.getMonth();
+						thn = tg.getFullYear();
+						div.innerHTML+=tgl+"-"+bulan+"-"+thn+"<img src='"+iconsrc+"'>"+cuaca+" ("+keterangan+") Temp: "+suhu+"&#176C/"+suhuNight+"&#176C <br>";
+
+
+					}
+					
+				}
+				
+				else{
+					var div = document.getElementById('laporanCuaca');
+					div.innerHTML='<h2>Error Mengambil data <a href="#" id="cl" onclick="displayCuaca(\''+kota+'\')">coba lagi</a></h2>';
+					console.log(request);
+				}
+			}
+			var div = document.getElementById('laporanCuaca');
+			div.innerHTML="<h2>Loading, harap sabar ...</h2>";
+			request.send(null);
+			
+	}
+
+	</script>
+
+</head>
+<body>
+<h1>Ramalan Cuaca</h1><br>
+
+<div id ="awal">
+<div>
+Provinsi  <select id="provinsi" onchange="defineKota(this.value)" onfocus="defineKota(this.value)">
+	
+	<option></option>
+	<option value="Sumatera Barat">Sumatera Barat</option>
+	<option value="Riau">Riau</option>
+	<option value="Jawa Barat">Jawa Barat</option>	
+</select><br>
+</div><br>
+
+<div>
+	Kota  <select id="kota" onchange="displayCuaca(this.value)">
+</select>
+</div>
+</div>
+
+
+<div id="akhir">
+<div>
+
+Provinsi  <select id="provinsiAdd">
+	
+	<option></option>
+	<option value="Sumatera Barat">Sumatera Barat</option>
+	<option value="Riau">Riau</option>
+	<option value="Jawa Barat">Jawa Barat</option>	
+</select><br>
+
+<br><input type="text" name="kota" id='inputKota'><br>
+
+</div>
+
+<div>
+	<button id="klik" onclick="tambahKota()">Tambah Kota</button>
+
+</div>
+</div>
+<div id="laporanCuaca"></div>
+
+</body>
+</html>
